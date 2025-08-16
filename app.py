@@ -22,7 +22,7 @@ def load_data():
             f.write(response.content)
 
     # Download meme_images.zip (containing 1001 images)
-    images_url = "https://drive.google.com/uc?export=download&id=YOUR_MEME_IMAGES_ZIP_ID_HERE"  # Replace with your meme_images.zip file ID
+    images_url = "https://drive.google.com/uc?export=download&id=1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO"  # Replace with your meme_images.zip file ID  1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO?usp=drive_link
     images_zip = "meme_images.zip"
     if not os.path.exists("meme_images"):
         response = requests.get(images_url)
@@ -114,3 +114,4 @@ else:
         st.dataframe(signals_df)
     else:
         st.info("Tradeable signals file not found.")
+
