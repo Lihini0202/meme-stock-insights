@@ -28,10 +28,20 @@ def load_data():
         response = requests.get(images_url)
         with open(images_zip, 'wb') as f:
             f.write(response.content)
-        # Unzip using zipfile
-        with zipfile.ZipFile(images_zip, 'r') as zip_ref:
-            zip_ref.extractall("meme_images/")
-        os.remove(images_zip)
+        try:
+            with zipfile.ZipFile(images_zip, 'r') as zip_ref:
+                # Test the zip file integrity
+                if zip_ref.testzip() is not None:
+                    st.error("The downloaded meme_images.zip file is corrupted. Please re-upload a valid zip file to Google Drive.")
+                    return None, None, None, None
+                zip_ref.extractall("meme_images/")
+            os.remove(images_zip)
+        except zipfile.BadZipFile:
+            st.error("The file meme_images.zip is not a valid zip file or is corrupted. Please check the file on Google Drive.")
+            return None, None, None, None
+        except Exception as e:
+            st.error(f"Error processing meme_images.zip: {str(e)}")
+            return None, None, None, None
 
     # Load local files
     mapped_data = pd.read_csv("data/mapped_meme_data.csv")
@@ -43,60 +53,64 @@ def load_data():
 
 mapped_df, processed_df, synthetic_df, signals_df = load_data()
 
-# Display mapped dataset
-st.write("### Mapped Meme Data")
-st.dataframe(mapped_df)
-
-# Display processed dataset
-st.write("### Processed Meme Data")
-if isinstance(processed_df, pd.DataFrame):
-    st.dataframe(processed_df)
+# Check if data loaded successfully
+if mapped_df is None:
+    st.error("Failed to load data. Please check the logs and Google Drive file IDs.")
 else:
-    st.write("Processed data is not a DataFrame. Displaying as text:")
-    st.write(processed_df)
+    # Display mapped dataset
+    st.write("### Mapped Meme Data")
+    st.dataframe(mapped_df)
 
-# Filtering
-st.write("### Filter Mapped Data")
-ticker_filter = st.multiselect("Select Tickers", options=mapped_df['ticker'].unique() if 'ticker' in mapped_df.columns else [], default=mapped_df['ticker'].unique() if 'ticker' in mapped_df.columns else [])
-sentiment_filter = st.multiselect("Select Sentiments", options=mapped_df['sentiment'].unique() if 'sentiment' in mapped_df.columns else [], default=mapped_df['sentiment'].unique() if 'sentiment' in mapped_df.columns else [])
-filtered_df = mapped_df[mapped_df['ticker'].isin(ticker_filter) & mapped_df['sentiment'].isin(sentiment_filter)] if 'ticker' in mapped_df.columns and 'sentiment' in mapped_df.columns else mapped_df
-st.dataframe(filtered_df)
-
-# Download filtered dataset
-csv = filtered_df.to_csv(index=False).encode('utf-8')
-st.download_button(
-    label="Download Filtered Mapped Data",
-    data=csv,
-    file_name="filtered_mapped_meme_data.csv",
-    mime="text/csv"
-)
-
-# Handle image-related data
-image_folder = "meme_images"
-os.makedirs(image_folder, exist_ok=True)
-if 'image_path' in mapped_df.columns:
-    sample_image_path = os.path.join(image_folder, mapped_df.iloc[0]['image_path'])
-    if os.path.exists(sample_image_path):
-        st.image(sample_image_path, caption="Sample Meme Image")
+    # Display processed dataset
+    st.write("### Processed Meme Data")
+    if isinstance(processed_df, pd.DataFrame):
+        st.dataframe(processed_df)
     else:
-        st.warning("Image path not found or inaccessible.")
-else:
-    st.info("No image data available in mapped dataset.")
+        st.write("Processed data is not a DataFrame. Displaying as text:")
+        st.write(processed_df)
 
-# Visualization
-st.write("### Sentiment Distribution")
-if 'sentiment' in mapped_df.columns:
-    fig, ax = plt.subplots()
-    mapped_df['sentiment'].value_counts().plot(kind='bar', ax=ax, color=['#4CAF50', '#F44336', '#2196F3'])
-    plt.xlabel("Sentiment")
-    plt.ylabel("Count")
-    st.pyplot(fig)
-else:
-    st.warning("No sentiment column available for visualization.")
+    # Filtering
+    st.write("### Filter Mapped Data")
+    ticker_filter = st.multiselect("Select Tickers", options=mapped_df['ticker'].unique() if 'ticker' in mapped_df.columns else [], default=mapped_df['ticker'].unique() if 'ticker' in mapped_df.columns else [])
+    sentiment_filter = st.multiselect("Select Sentiments", options=mapped_df['sentiment'].unique() if 'sentiment' in mapped_df.columns else [], default=mapped_df['sentiment'].unique() if 'sentiment' in mapped_df.columns else [])
+    filtered_df = mapped_df[mapped_df['ticker'].isin(ticker_filter) & mapped_df['sentiment'].isin(sentiment_filter)] if 'ticker' in mapped_df.columns and 'sentiment' in mapped_df.columns else mapped_df
+    st.dataframe(filtered_df)
 
-# Tradeable signals
-if signals_df is not None:
-    st.write("### Tradeable Signals")
-    st.dataframe(signals_df)
-else:
-    st.info("Tradeable signals file not found.")
+    # Download filtered dataset
+    csv = filtered_df.to_csv(index=False).encode('utf-8')
+    st.download_button(
+        label="Download Filtered Mapped Data",
+        data=csv,
+        file_name="filtered_mapped_meme_data.csv",
+        mime="text/csv"
+    )
+
+    # Handle image-related data
+    image_folder = "meme_images"
+    os.makedirs(image_folder, exist_ok=True)
+    if 'image_path' in mapped_df.columns:
+        sample_image_path = os.path.join(image_folder, mapped_df.iloc[0]['image_path'])
+        if os.path.exists(sample_image_path):
+            st.image(sample_image_path, caption="Sample Meme Image")
+        else:
+            st.warning("Image path not found or inaccessible.")
+    else:
+        st.info("No image data available in mapped dataset.")
+
+    # Visualization
+    st.write("### Sentiment Distribution")
+    if 'sentiment' in mapped_df.columns:
+        fig, ax = plt.subplots()
+        mapped_df['sentiment'].value_counts().plot(kind='bar', ax=ax, color=['#4CAF50', '#F44336', '#2196F3'])
+        plt.xlabel("Sentiment")
+        plt.ylabel("Count")
+        st.pyplot(fig)
+    else:
+        st.warning("No sentiment column available for visualization.")
+
+    # Tradeable signals
+    if signals_df is not None:
+        st.write("### Tradeable Signals")
+        st.dataframe(signals_df)
+    else:
+        st.info("Tradeable signals file not found.")
