@@ -93,6 +93,3 @@ Built with ❤️ using Streamlit.
 Data magic from Google Colab.
 Inspired by the wild world of meme stocks! 📈
 
-📧 Contact
-Got questions? 💬 Reach out at lihinisewmini12@gmail.com or open an issue here! 🐛
-  
