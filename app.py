@@ -5,7 +5,7 @@ import requests
 import os
 import matplotlib.pyplot as plt
 from PIL import Image
-import subprocess
+import zipfile
 
 # Streamlit app title
 st.title("Meme Data Explorer with Trained Files")
@@ -28,8 +28,9 @@ def load_data():
         response = requests.get(images_url)
         with open(images_zip, 'wb') as f:
             f.write(response.content)
-        # Unzip the folder
-        subprocess.run(["unzip", "-o", images_zip, "-d", "meme_images/"])
+        # Unzip using zipfile
+        with zipfile.ZipFile(images_zip, 'r') as zip_ref:
+            zip_ref.extractall("meme_images/")
         os.remove(images_zip)
 
     # Load local files
