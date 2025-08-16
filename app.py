@@ -20,14 +20,17 @@ def load_data():
         response = requests.get(processed_url)
         with open(processed_path, 'wb') as f:
             f.write(response.content)
+        st.write(f"Downloaded processed_meme_data.pkl, size: {os.path.getsize(processed_path)} bytes")
 
     # Download meme_img.zip (containing 1001 images)
-    images_url = "https://drive.google.com/uc?export=download&id=1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO"  # Replace https://drive.google.com/drive/folders/1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO?usp=drive_link
+    images_url = "https://drive.google.com/uc?export=download&id=1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO"  # Replace with your meme_img.zip file ID https://drive.google.com/drive/folders/1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO?usp=drive_link
     images_zip = "meme_img.zip"
     if not os.path.exists("meme_img"):
         response = requests.get(images_url)
         with open(images_zip, 'wb') as f:
             f.write(response.content)
+        downloaded_size = os.path.getsize(images_zip)
+        st.write(f"Downloaded meme_img.zip, size: {downloaded_size} bytes")
         try:
             with zipfile.ZipFile(images_zip, 'r') as zip_ref:
                 # Test the zip file integrity
@@ -35,12 +38,13 @@ def load_data():
                     st.error("The downloaded meme_img.zip file is corrupted. Please re-upload a valid zip file to Google Drive.")
                     return None, None, None, None
                 zip_ref.extractall("meme_img/")
+                st.write(f"Extracted {len(zip_ref.infolist())} files from meme_img.zip")
             os.remove(images_zip)
         except zipfile.BadZipFile:
-            st.error("The file meme_img.zip is not a valid zip file or is corrupted. Please check the file on Google Drive.")
+            st.error(f"The file meme_img.zip is not a valid zip file or is corrupted. Downloaded size: {downloaded_size} bytes. Please check the file on Google Drive.")
             return None, None, None, None
         except Exception as e:
-            st.error(f"Error processing meme_img.zip: {str(e)}")
+            st.error(f"Error processing meme_img.zip: {str(e)}. Downloaded size: {downloaded_size} bytes")
             return None, None, None, None
 
     # Load local files
