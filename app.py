@@ -14,7 +14,7 @@ st.title("Meme Data Explorer with Trained Files")
 @st.cache_data
 def load_data():
     # Download processed_meme_data.pkl
-    processed_url = "https://drive.google.com/uc?export=download&id=1DSpPKfF_CAzpOaPTRATkC9YjWR_bFND-"  
+    processed_url = "https://drive.google.com/uc?export=download&id=1DSpPKfF_CAzpOaPTRATkC9YjWR_bFND-"  # Confirmed ID
     processed_path = "data/processed_meme_data.pkl"
     if not os.path.exists(processed_path):
         response = requests.get(processed_url)
@@ -22,7 +22,7 @@ def load_data():
             f.write(response.content)
 
     # Download meme_images.zip (containing 1001 images)
-    images_url = "https://drive.google.com/uc?export=download&id=YOUR_MEME_IMAGES_ZIP_ID_HERE"  
+    images_url = "https://drive.google.com/uc?export=download&id=YOUR_MEME_IMAGES_ZIP_ID_HERE"  # Replace with your meme_images.zip file ID
     images_zip = "meme_images.zip"
     if not os.path.exists("meme_images"):
         response = requests.get(images_url)
