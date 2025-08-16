@@ -21,8 +21,8 @@ def load_data():
         with open(processed_path, 'wb') as f:
             f.write(response.content)
 
-    # Download meme_images.zip (containing 1001 images)
-    images_url = "https://drive.google.com/uc?export=download&id=1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO"  # Replace with your meme_images.zip file ID  1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO?usp=drive_link
+    # Download meme_img.zip (containing 1001 images)
+    images_url = "https://drive.google.com/uc?export=download&id=1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO"  # Replace https://drive.google.com/drive/folders/1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO?usp=drive_link
     images_zip = "meme_img.zip"
     if not os.path.exists("meme_img"):
         response = requests.get(images_url)
@@ -32,15 +32,15 @@ def load_data():
             with zipfile.ZipFile(images_zip, 'r') as zip_ref:
                 # Test the zip file integrity
                 if zip_ref.testzip() is not None:
-                    st.error("The downloaded meme_images.zip file is corrupted. Please re-upload a valid zip file to Google Drive.")
+                    st.error("The downloaded meme_img.zip file is corrupted. Please re-upload a valid zip file to Google Drive.")
                     return None, None, None, None
-                zip_ref.extractall("meme_images/")
+                zip_ref.extractall("meme_img/")
             os.remove(images_zip)
         except zipfile.BadZipFile:
-            st.error("The file meme_images.zip is not a valid zip file or is corrupted. Please check the file on Google Drive.")
+            st.error("The file meme_img.zip is not a valid zip file or is corrupted. Please check the file on Google Drive.")
             return None, None, None, None
         except Exception as e:
-            st.error(f"Error processing meme_images.zip: {str(e)}")
+            st.error(f"Error processing meme_img.zip: {str(e)}")
             return None, None, None, None
 
     # Load local files
@@ -86,7 +86,7 @@ else:
     )
 
     # Handle image-related data
-    image_folder = "meme_images"
+    image_folder = "meme_img"
     os.makedirs(image_folder, exist_ok=True)
     if 'image_path' in mapped_df.columns:
         sample_image_path = os.path.join(image_folder, mapped_df.iloc[0]['image_path'])
@@ -114,6 +114,3 @@ else:
         st.dataframe(signals_df)
     else:
         st.info("Tradeable signals file not found.")
-
-
-
