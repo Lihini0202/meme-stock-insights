@@ -1,5 +1,11 @@
-streamlit==1.39.0
-pandas==2.2.2
-pillow<11  # Loosened to allow versions <11, compatible with streamlit 1.39.0
-matplotlib==3.10.0
-requests==2.32.3
+streamlit
+pandas
+numpy
+pillow
+torch
+torchvision
+xgboost
+seaborn
+scipy
+matplotlib
+gdown
