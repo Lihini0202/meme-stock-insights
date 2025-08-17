@@ -41,7 +41,7 @@ def download_meme_images():
     try:
         file_id = drive_link.split('/d/')[1].split('/')[0]
     except IndexError:
-        st.error("Invalid Google Drive link for meme_image.zip. Please provide a valid file link.")
+        st.error(f"Invalid Google Drive link for meme_image.zip: {drive_link}. Please provide a valid file link.")
         logger.error("Invalid Google Drive link for meme_image.zip: %s", drive_link)
         return None
     output_zip = "meme_image.zip"
@@ -49,7 +49,7 @@ def download_meme_images():
     
     # Download zip file
     try:
-        logger.info("Downloading meme_image.zip from Google Drive...")
+        logger.info("Downloading meme_image.zip from Google Drive: %s", drive_link)
         gdown.download(f"https://drive.google.com/uc?id={file_id}", output_zip, quiet=False)
     except Exception as e:
         st.error(f"Failed to download meme_image.zip: {e}")
@@ -253,5 +253,3 @@ elif page == "Model Insights":
 # Footer
 st.sidebar.markdown("---")
 st.sidebar.info("Built with Streamlit. Data from meme-stock-insights project. Images and model sourced from Google Drive.")
-
-
