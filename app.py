@@ -33,27 +33,26 @@ Meme images and processed data are downloaded from Google Drive due to size cons
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Select Section", ["Datasets", "Visualizations", "Meme Gallery", "Trading Signals", "Model Insights"])
 
-# Function to download and extract meme_image from Google Drive
+# Function to download and extract meme_images.zip from Google Drive
 @st.cache_resource
 def download_meme_images():
-    # Replace with the correct file link for meme_image.zip
-    drive_link = "https://drive.google.com/file/d/1ayY2xkN35O0YI8AhkVFHRNXLvwAtzQx6/view?usp=drive_link"  # Update with new file link
+    drive_link = "https://drive.google.com/file/d/17y_b9nmOBx_ethy6tfv_Big8teFiD2OR/view?usp=sharing"
     try:
         file_id = drive_link.split('/d/')[1].split('/')[0]
     except IndexError:
-        st.error(f"Invalid Google Drive link for meme_image.zip: {drive_link}. Please provide a valid file link.")
-        logger.error("Invalid Google Drive link for meme_image.zip: %s", drive_link)
+        st.error(f"Invalid Google Drive link for meme_images.zip: {drive_link}. Please provide a valid file link.")
+        logger.error("Invalid Google Drive link for meme_images.zip: %s", drive_link)
         return None
-    output_zip = "meme_image.zip"
+    output_zip = "meme_image.zip"  # Rename to match expected filename
     output_folder = "meme_images"
     
     # Download zip file
     try:
-        logger.info("Downloading meme_image.zip from Google Drive: %s", drive_link)
+        logger.info("Downloading meme_images.zip from Google Drive: %s", drive_link)
         gdown.download(f"https://drive.google.com/uc?id={file_id}", output_zip, quiet=False)
     except Exception as e:
-        st.error(f"Failed to download meme_image.zip: {e}")
-        logger.error("Failed to download meme_image.zip: %s", str(e))
+        st.error(f"Failed to download meme_images.zip: {e}")
+        logger.error("Failed to download meme_images.zip: %s", str(e))
         return None
     
     # Verify and extract zip
@@ -62,7 +61,7 @@ def download_meme_images():
             with zipfile.ZipFile(output_zip, 'r') as zip_ref:
                 zip_ref.extractall(output_folder)
             st.success(f"Extracted images to {output_folder}/")
-            logger.info("Extracted meme_image.zip to %s", output_folder)
+            logger.info("Extracted meme_images.zip to %s", output_folder)
         except zipfile.BadZipFile:
             st.error("Invalid or corrupted zip file. Please verify the Google Drive link and zip integrity.")
             logger.error("Invalid or corrupted zip file: %s", output_zip)
