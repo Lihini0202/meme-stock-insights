@@ -37,7 +37,7 @@ page = st.sidebar.radio("Select Section", ["Datasets", "Visualizations", "Meme G
 @st.cache_resource
 def download_meme_images():
     # Replace with the correct file link for meme_image.zip
-    drive_link = "https://drive.google.com/drive/folders/1FHq8XSdZsu4_WFEV0o_sJZ2YSMcJVWd2?usp=drive_link"  
+    drive_link = "https://drive.google.com/drive/folders/1rkxpBmT1PKw3KAyu37GOrgSKrx8esH8y?usp=drive_link"  
     try:
         file_id = drive_link.split('/d/')[1].split('/')[0]
     except IndexError:
@@ -253,5 +253,6 @@ elif page == "Model Insights":
 # Footer
 st.sidebar.markdown("---")
 st.sidebar.info("Built with Streamlit. Data from meme-stock-insights project. Images and model sourced from Google Drive.")
+
 
 
