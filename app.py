@@ -5,7 +5,6 @@ import requests
 import os
 import matplotlib.pyplot as plt
 from PIL import Image
-import zipfile
 
 # Streamlit app title
 st.title("Meme Data Explorer with Trained Files")
@@ -22,37 +21,24 @@ def load_data():
             f.write(response.content)
         st.write(f"Downloaded processed_meme_data.pkl, size: {os.path.getsize(processed_path)} bytes")
 
-    # Download meme_img.zip (containing 1001 images)
-    images_url = "https://drive.google.com/uc?export=download&id=1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO"  # Replace with your meme_img.zip file ID https://drive.google.com/drive/folders/1k5pODJE8e3omLmJotJZFfXrCZcM4XzoO?usp=drive_link
-    images_zip = "meme_img.zip"
-    if not os.path.exists("meme_img"):
-        response = requests.get(images_url)
-        with open(images_zip, 'wb') as f:
-            f.write(response.content)
-        downloaded_size = os.path.getsize(images_zip)
-        st.write(f"Downloaded meme_img.zip, size: {downloaded_size} bytes")
-        try:
-            with zipfile.ZipFile(images_zip, 'r') as zip_ref:
-                # Test the zip file integrity
-                if zip_ref.testzip() is not None:
-                    st.error("The downloaded meme_img.zip file is corrupted. Please re-upload a valid zip file to Google Drive.")
-                    return None, None, None, None
-                zip_ref.extractall("meme_img/")
-                st.write(f"Extracted {len(zip_ref.infolist())} files from meme_img.zip")
-            os.remove(images_zip)
-        except zipfile.BadZipFile:
-            st.error(f"The file meme_img.zip is not a valid zip file or is corrupted. Downloaded size: {downloaded_size} bytes. Please check the file on Google Drive.")
-            return None, None, None, None
-        except Exception as e:
-            st.error(f"Error processing meme_img.zip: {str(e)}. Downloaded size: {downloaded_size} bytes")
-            return None, None, None, None
+    # Set image folder (already unzipped on Google Drive)
+    image_folder = "meme_img"
+    if not os.path.exists(image_folder):
+        st.warning(
+            f"Image folder '{image_folder}' not found locally. "
+            f"Please download the images from [this Google Drive folder]"
+            f"(https://drive.google.com/drive/folders/1rkxpBmT1PKw3KAyu37GOrgSKrx8esH8y?usp=drive_link) "
+            "and place them in the 'meme_img' folder."
+        )
+        return None, None, None, None
 
-    # Load local files
+    # Load local CSV files
     mapped_data = pd.read_csv("data/mapped_meme_data.csv")
     synthetic_data = pd.read_csv("data/synthetic_meme_dataset_with_images.csv") if os.path.exists("data/synthetic_meme_dataset_with_images.csv") else None
     signals_data = pd.read_csv("data/tradeable_signals.csv") if os.path.exists("data/tradeable_signals.csv") else None
     with open(processed_path, "rb") as f:
         processed_data = pickle.load(f)
+
     return mapped_data, processed_data, synthetic_data, signals_data
 
 mapped_df, processed_df, synthetic_df, signals_df = load_data()
@@ -75,9 +61,18 @@ else:
 
     # Filtering
     st.write("### Filter Mapped Data")
-    ticker_filter = st.multiselect("Select Tickers", options=mapped_df['ticker'].unique() if 'ticker' in mapped_df.columns else [], default=mapped_df['ticker'].unique() if 'ticker' in mapped_df.columns else [])
-    sentiment_filter = st.multiselect("Select Sentiments", options=mapped_df['sentiment'].unique() if 'sentiment' in mapped_df.columns else [], default=mapped_df['sentiment'].unique() if 'sentiment' in mapped_df.columns else [])
-    filtered_df = mapped_df[mapped_df['ticker'].isin(ticker_filter) & mapped_df['sentiment'].isin(sentiment_filter)] if 'ticker' in mapped_df.columns and 'sentiment' in mapped_df.columns else mapped_df
+    ticker_filter = st.multiselect(
+        "Select Tickers",
+        options=mapped_df['ticker'].unique() if 'ticker' in mapped_df.columns else [],
+        default=mapped_df['ticker'].unique() if 'ticker' in mapped_df.columns else []
+    )
+    sentiment_filter = st.multiselect(
+        "Select Sentiments",
+        options=mapped_df['sentiment'].unique() if 'sentiment' in mapped_df.columns else [],
+        default=mapped_df['sentiment'].unique() if 'sentiment' in mapped_df.columns else []
+    )
+    filtered_df = mapped_df[mapped_df['ticker'].isin(ticker_filter) & mapped_df['sentiment'].isin(sentiment_filter)] \
+        if 'ticker' in mapped_df.columns and 'sentiment' in mapped_df.columns else mapped_df
     st.dataframe(filtered_df)
 
     # Download filtered dataset
