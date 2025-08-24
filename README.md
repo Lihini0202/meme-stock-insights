@@ -1,5 +1,5 @@
 # 🎉 Meme Stock Insights 🚀💎🙌  
-*Your one-stop Streamlit app for exploring meme stock data with trained models, quirky memes, and trade signals!*  
+*Streamlit app for exploring meme stock data with trained models, quirky memes, and trade signals!*  
 
 ---
 
@@ -47,7 +47,7 @@ meme-stock-insights/
 
 1. Clone the repo:  
    ```bash
-   git clone https://github.com/<your-username>/meme-stock-insights.git
+   git clone https://github.com/Lihini0202/meme-stock-insights.git
    cd meme-stock-insights
    ```
 
@@ -93,22 +93,6 @@ meme-stock-insights/
 
 ---
 
-## 🤝 Contributing 👩‍💻👨‍💻  
-
-We ❤️ contributions!  
-
-1. 🍴 Fork this repo  
-2. 🌿 Create a branch → `git checkout -b awesome-feature`  
-3. 💾 Commit changes → `git commit -m "Add awesome feature"`  
-4. 🚀 Push branch → `git push origin awesome-feature`  
-5. 🎉 Open a Pull Request  
-
----
-
-## 📜 License 📄  
-[Choose a license, e.g., MIT] 🎫  
-
----
 
 ## 🙌 Acknowledgments 💖  
 - Built with ❤️ using **Streamlit**  
