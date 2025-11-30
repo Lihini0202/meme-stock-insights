@@ -1,12 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-try:
-    import seaborn as sns
-except ModuleNotFoundError:
-    # This block is essential for ensuring seaborn is available
-    st.error("Seaborn is not installed. Please ensure 'seaborn' is in requirements.txt and installed.")
-    st.stop()
+import seaborn as sns
 from PIL import Image
 import os
 import pickle
@@ -14,15 +9,16 @@ import gdown
 import zipfile
 import xgboost as xgb
 import logging
+# --- NEW IMPORTS for Model Metrics ---
+from sklearn.metrics import confusion_matrix, roc_curve, auc, accuracy_score, precision_score, recall_score, f1_score
+# -------------------------------------
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- GOOGLE DRIVE FILE IDs ---
-# The File ID for your meme_images.zip 
+# --- GOOGLE DRIVE FILE IDs --- 
 MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR" 
-# The File ID for your processed_meme_data.pkl
 PROCESSED_DATA_FILE_ID = "1ZRhAAFXqTLj8rN7TzzkD9UtTy3jPwKZ7"
 # --- END FILE IDs ---
 
@@ -108,11 +104,9 @@ def download_processed_data(file_id):
 
 ## ⚙️ Data Loading and Initialization
 
-# Load CSV data and trigger downloads
 @st.cache_data
 def load_data(image_file_id, processed_file_id):
     try:
-        # Renamed variable from 'synthetic_df' to 'main_data_df'
         main_data_df = pd.read_csv('data/meme_dataset_with_images.csv')
         signals_df = pd.read_csv('data/tradeable_signals.csv')
         mapped_df = pd.read_csv('data/mapped_meme_data.csv')
@@ -123,7 +117,6 @@ def load_data(image_file_id, processed_file_id):
     
     processed_data = download_processed_data(processed_file_id)
     
-    # Return main_data_df instead of synthetic_df
     return main_data_df, signals_df, mapped_df, processed_data
 
 # Execute downloads and load dataframes
@@ -132,7 +125,6 @@ if image_folder is None:
     st.warning("Could not download meme images. Displaying locally if available.")
     image_folder = "meme_images"
 
-# Updated variable name to main_data_df
 main_data_df, signals_df, mapped_df, processed_data = load_data(MEME_IMAGE_FILE_ID, PROCESSED_DATA_FILE_ID)
 
 if main_data_df is None or processed_data is None:
@@ -144,7 +136,6 @@ if main_data_df is None or processed_data is None:
 if page == "Datasets":
     st.header("📊 Datasets Overview")
     
-    # Updated text to reflect it's the main data, not synthetic
     st.subheader("Main Meme Stock Data")
     st.dataframe(main_data_df.head(10))
     
@@ -231,36 +222,99 @@ elif page == "Model Insights":
     st.header("🧠 Model Insights")
     st.markdown("Feature importance and model performance metrics.")
     
-    if isinstance(processed_data, dict) and 'model' in processed_data and 'features' in processed_data:
-        model = processed_data['model']
+    # Check for model, features, and the necessary test data
+    required_keys = ['model', 'features', 'y_test', 'y_pred', 'y_proba']
+    if (isinstance(processed_data, dict) and 
+        all(key in processed_data for key in required_keys)):
         
-        # Feature Importance
+        model = processed_data['model']
+        y_test = processed_data['y_test']
+        y_pred = processed_data['y_pred']
+        y_proba = processed_data['y_proba']
+
+        # --- ROW 1: Feature Importance ---
         st.subheader("Feature Importance")
         try:
-            # Assuming model is an XGBoost or similar object with feature_importances_
             feature_importances = pd.Series(model.feature_importances_, index=processed_data['features'])
             
-            fig, ax = plt.subplots(figsize=(10, 6))
-            feature_importances.sort_values(ascending=False).head(10).plot(kind='barh', ax=ax)
-            ax.set_title("Top 10 Feature Importances")
-            st.pyplot(fig)
+            fig_feat, ax_feat = plt.subplots(figsize=(10, 6))
+            feature_importances.sort_values(ascending=False).head(10).plot(kind='barh', ax=ax_feat)
+            ax_feat.set_title("Top 10 Feature Importances")
+            st.pyplot(fig_feat)
             
-        except AttributeError:
-            st.warning("Model object does not have the 'feature_importances_' attribute.")
         except Exception as e:
             st.warning(f"Failed to display feature importance: {e}")
-            
-        # Model Metrics (Placeholder/Example)
-        st.subheader("Model Metrics (Example)")
-        st.markdown("""
-        | Metric | Value |
-        |---|---|
-        | **Accuracy** | 85.5% |
-        | **Precision** | 82.1% |
-        | **Recall** | 88.0% |
-        | **F1-Score** | 85.0% |
-        """)
-        
-    else:
-        st.warning("Model or required feature data ('model', 'features' keys) not found in the 'processed_data'.")
 
+        st.markdown("---")
+
+        # --- ROW 2: Model Performance Metrics (Confusion Matrix and ROC) ---
+        col1, col2 = st.columns(2)
+
+        # 1. Confusion Matrix
+        with col1:
+            st.subheader("Confusion Matrix")
+            try:
+                cm = confusion_matrix(y_test, y_pred)
+                fig_cm, ax_cm = plt.subplots(figsize=(6, 5))
+                sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                            xticklabels=['Down (0)', 'Up (1)'], 
+                            yticklabels=['Down (0)', 'Up (1)'], ax=ax_cm)
+                ax_cm.set_title('Confusion Matrix')
+                ax_cm.set_xlabel('Predicted Label')
+                ax_cm.set_ylabel('True Label')
+                st.pyplot(fig_cm)
+            except Exception as e:
+                st.error(f"Failed to display Confusion Matrix: {e}")
+                
+        # 2. ROC Curve
+        with col2:
+            st.subheader("ROC Curve")
+            try:
+                fpr, tpr, _ = roc_curve(y_test, y_proba)
+                roc_auc = auc(fpr, tpr)
+                
+                fig_roc, ax_roc = plt.subplots(figsize=(6, 5))
+                ax_roc.plot(fpr, tpr, label=f'ROC Curve (AUC = {roc_auc:.2f})')
+                ax_roc.plot([0, 1], [0, 1], 'k--')
+                ax_roc.set_title('Receiver Operating Characteristic')
+                ax_roc.set_xlabel('False Positive Rate')
+                ax_roc.set_ylabel('True Positive Rate')
+                ax_roc.legend(loc="lower right")
+                st.pyplot(fig_roc)
+            except Exception as e:
+                st.error(f"Failed to display ROC Curve: {e}")
+
+        st.markdown("---")
+
+        # --- ROW 3: Metric Scores Table ---
+        st.subheader("Quantitative Model Metrics")
+        
+        # Calculate scores
+        accuracy = accuracy_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred, zero_division=0)
+        recall = recall_score(y_test, y_pred, zero_division=0)
+        f1 = f1_score(y_test, y_pred, zero_division=0)
+
+        metrics_df = pd.DataFrame({
+            'Metric': ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC AUC'],
+            'Value': [
+                f"{accuracy:.3f}", 
+                f"{precision:.3f}", 
+                f"{recall:.3f}", 
+                f"{f1:.3f}", 
+                f"{roc_auc:.3f}"
+            ]
+        })
+        st.dataframe(metrics_df, hide_index=True)
+
+
+    else:
+        st.warning("""
+        Model or required test data not found in the 'processed_data'. 
+        Please ensure your Jupyter Notebook saves the following keys to 'processed_meme_data.pkl':
+        - **'model'** (Trained Model Object)
+        - **'features'** (List of feature names)
+        - **'y_test'** (True labels of the test set)
+        - **'y_pred'** (Predicted labels of the test set)
+        - **'y_proba'** (Prediction probabilities for the positive class)
+        """)
