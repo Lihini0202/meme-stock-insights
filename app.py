@@ -1,11 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-try:
-    import seaborn as sns
-except ModuleNotFoundError:
-    st.error("Seaborn is not installed. Please ensure 'seaborn' is in requirements.txt and installed.")
-    st.stop()
+import seaborn as sns
 from PIL import Image
 import os
 import pickle
@@ -19,9 +15,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- GOOGLE DRIVE FILE IDs ---
-# The File ID for your meme_images.zip (based on your original code)
 MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR" 
-# The File ID for your processed_meme_data.pkl (based on your confirmed link)
 PROCESSED_DATA_FILE_ID = "1DSpPKfF_CAzpOaPTRATkC9YjWR_bFND-"
 # --- END FILE IDs ---
 
@@ -42,13 +36,11 @@ page = st.sidebar.radio("Select Section", ["Datasets", "Visualizations", "Meme G
 
 ## 📂 Data Download Functions
 
-# Function to download and extract meme_images.zip from Google Drive
 @st.cache_resource
 def download_meme_images(file_id):
     output_zip = "meme_image.zip"
     output_folder = "meme_images"
     
-    # Download zip file using the file ID
     try:
         logger.info("Downloading meme_images.zip from Google Drive with ID: %s", file_id)
         gdown.download(f"https://drive.google.com/uc?id={file_id}", output_zip, quiet=False)
@@ -57,7 +49,6 @@ def download_meme_images(file_id):
         logger.error("Failed to download meme_images.zip: %s", str(e))
         return None
     
-    # Verify and extract zip
     if os.path.exists(output_zip):
         try:
             with zipfile.ZipFile(output_zip, 'r') as zip_ref:
@@ -79,15 +70,11 @@ def download_meme_images(file_id):
     
     return output_folder
 
-# Function to download processed_meme_data.pkl from Google Drive
 @st.cache_resource
 def download_processed_data(file_id):
     output_file = "data/processed_meme_data.pkl"
-    
-    # Ensure data directory exists
     os.makedirs("data", exist_ok=True)
     
-    # Download pickle file using the file ID
     try:
         logger.info("Downloading processed_meme_data.pkl from Google Drive with ID: %s", file_id)
         gdown.download(f"https://drive.google.com/uc?id={file_id}", output_file, quiet=False)
@@ -114,7 +101,6 @@ def download_processed_data(file_id):
 
 ## ⚙️ Data Loading and Initialization
 
-# Load CSV data and trigger downloads
 @st.cache_data
 def load_data(image_file_id, processed_file_id):
     try:
@@ -126,7 +112,6 @@ def load_data(image_file_id, processed_file_id):
         logger.error("Error loading CSV files: %s", str(e))
         return None, None, None, None
     
-    # Trigger download of the processed data (Model/features)
     processed_data = download_processed_data(processed_file_id)
     
     return synthetic_df, signals_df, mapped_df, processed_data
@@ -135,11 +120,10 @@ def load_data(image_file_id, processed_file_id):
 image_folder = download_meme_images(MEME_IMAGE_FILE_ID)
 if image_folder is None:
     st.warning("Could not download meme images. Displaying locally if available.")
-    image_folder = "meme_images" # Fallback to local folder if download fails
+    image_folder = "meme_images"
 
 synthetic_df, signals_df, mapped_df, processed_data = load_data(MEME_IMAGE_FILE_ID, PROCESSED_DATA_FILE_ID)
 
-# Critical stop if essential data is missing
 if synthetic_df is None or processed_data is None:
     st.error("Critical data failed to load. Please check file paths and Google Drive IDs/permissions.")
     st.stop() 
@@ -166,8 +150,8 @@ if page == "Datasets":
         st.code(list(processed_data.keys()))
     else:
         st.write(f"Processed data type: **{type(processed_data)}**")
-
-st.markdown("---") # Corrected separator
+        
+    st.markdown("---") # Separator moved inside the block
 
 elif page == "Visualizations":
     st.header("📉 Visualizations")
@@ -190,7 +174,7 @@ elif page == "Visualizations":
     else:
         st.warning("Column 'price_change' not found in synthetic data for histogram.")
 
-st.markdown("---") # Corrected separator
+    st.markdown("---") # Separator moved inside the block
 
 elif page == "Meme Gallery":
     st.header("🖼️ Meme Gallery")
@@ -204,9 +188,8 @@ elif page == "Meme Gallery":
     if image_files:
         st.info(f"Loaded {len(image_files)} images from the `{image_folder}` folder.")
         
-        # Display images in columns
         cols = st.columns(4)
-        for i, filename in enumerate(image_files[:12]): # Show top 12 images
+        for i, filename in enumerate(image_files[:12]):
             try:
                 img_path = os.path.join(image_folder, filename)
                 image = Image.open(img_path)
@@ -218,7 +201,7 @@ elif page == "Meme Gallery":
     else:
         st.error(f"No images found in the '{image_folder}' folder. The download may have failed.")
 
-st.markdown("---") # Corrected separator
+    st.markdown("---") # Separator moved inside the block
 
 elif page == "Trading Signals":
     st.header("🚦 Trading Signals")
@@ -230,20 +213,18 @@ elif page == "Trading Signals":
     else:
         st.error("Trading Signals data not loaded.")
 
-st.markdown("---") # Corrected separator
+    st.markdown("---") # Separator moved inside the block
 
 elif page == "Model Insights":
     st.header("🧠 Model Insights")
     st.markdown("Feature importance and model performance metrics.")
     
-    # Check if processed_data is a dictionary and contains a model
     if isinstance(processed_data, dict) and 'model' in processed_data and 'features' in processed_data:
         model = processed_data['model']
         
         # Feature Importance
         st.subheader("Feature Importance")
         try:
-            # Assuming model is an XGBoost or similar object with feature_importances_
             feature_importances = pd.Series(model.feature_importances_, index=processed_data['features'])
             
             fig, ax = plt.subplots(figsize=(10, 6))
