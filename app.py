@@ -1,7 +1,12 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
+try:
+    import seaborn as sns
+except ModuleNotFoundError:
+    # This block is essential for ensuring seaborn is available
+    st.error("Seaborn is not installed. Please ensure 'seaborn' is in requirements.txt and installed.")
+    st.stop()
 from PIL import Image
 import os
 import pickle
@@ -15,7 +20,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- GOOGLE DRIVE FILE IDs ---
+# The File ID for your meme_images.zip (based on your original code)
 MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR" 
+# The File ID for your processed_meme_data.pkl (based on your confirmed link)
 PROCESSED_DATA_FILE_ID = "1DSpPKfF_CAzpOaPTRATkC9YjWR_bFND-"
 # --- END FILE IDs ---
 
@@ -25,7 +32,7 @@ st.set_page_config(page_title="Meme Stock Insights", layout="wide")
 # Title and description
 st.title("📈 Meme Stock Insights Dashboard")
 st.markdown("""
-This app provides insights into meme stocks based on synthetic and processed data. 
+This app provides insights into meme stocks based on real-world and processed data. 
 Explore datasets, visualizations, trading signals, and model insights.
 Meme images and processed data are downloaded from Google Drive due to size constraints.
 """)
@@ -101,20 +108,23 @@ def download_processed_data(file_id):
 
 ## ⚙️ Data Loading and Initialization
 
+# Load CSV data and trigger downloads
 @st.cache_data
 def load_data(image_file_id, processed_file_id):
     try:
-        synthetic_df = pd.read_csv('data/synthetic_meme_dataset_with_images.csv')
+        # Renamed variable from 'synthetic_df' to 'main_data_df'
+        main_data_df = pd.read_csv('data/meme_dataset_with_images.csv')
         signals_df = pd.read_csv('data/tradeable_signals.csv')
         mapped_df = pd.read_csv('data/mapped_meme_data.csv')
     except FileNotFoundError as e:
         st.error(f"Error loading CSV files: {e}. Ensure data files are in the 'data/' folder.")
         logger.error("Error loading CSV files: %s", str(e))
-        return None, None, None, None
+        return None, None, None, None, None
     
     processed_data = download_processed_data(processed_file_id)
     
-    return synthetic_df, signals_df, mapped_df, processed_data
+    # Return main_data_df instead of synthetic_df
+    return main_data_df, signals_df, mapped_df, processed_data
 
 # Execute downloads and load dataframes
 image_folder = download_meme_images(MEME_IMAGE_FILE_ID)
@@ -122,9 +132,10 @@ if image_folder is None:
     st.warning("Could not download meme images. Displaying locally if available.")
     image_folder = "meme_images"
 
-synthetic_df, signals_df, mapped_df, processed_data = load_data(MEME_IMAGE_FILE_ID, PROCESSED_DATA_FILE_ID)
+# Updated variable name to main_data_df
+main_data_df, signals_df, mapped_df, processed_data = load_data(MEME_IMAGE_FILE_ID, PROCESSED_DATA_FILE_ID)
 
-if synthetic_df is None or processed_data is None:
+if main_data_df is None or processed_data is None:
     st.error("Critical data failed to load. Please check file paths and Google Drive IDs/permissions.")
     st.stop() 
 
@@ -133,8 +144,9 @@ if synthetic_df is None or processed_data is None:
 if page == "Datasets":
     st.header("📊 Datasets Overview")
     
-    st.subheader("Synthetic Meme Dataset")
-    st.dataframe(synthetic_df.head(10))
+    # Updated text to reflect it's the main data, not synthetic
+    st.subheader("Main Meme Stock Data")
+    st.dataframe(main_data_df.head(10))
     
     st.subheader("Mapped Meme Data")
     st.dataframe(mapped_df.head(10))
@@ -151,30 +163,30 @@ if page == "Datasets":
     else:
         st.write(f"Processed data type: **{type(processed_data)}**")
         
-    st.markdown("---") # Separator moved inside the block
+    st.markdown("---") 
 
 elif page == "Visualizations":
     st.header("📉 Visualizations")
     
     # Sentiment Distribution
-    st.subheader("Sentiment Distribution (Synthetic Data)")
-    if 'sentiment' in synthetic_df.columns:
+    st.subheader("Sentiment Distribution (Main Data)")
+    if 'sentiment' in main_data_df.columns:
         fig, ax = plt.subplots()
-        sns.countplot(x='sentiment', data=synthetic_df, ax=ax)
+        sns.countplot(x='sentiment', data=main_data_df, ax=ax)
         ax.set_title("Sentiment Distribution")
         st.pyplot(fig)
     
     # Price Change Histogram
     st.subheader("Price Change Histogram")
-    if 'price_change' in synthetic_df.columns:
+    if 'price_change' in main_data_df.columns:
         fig, ax = plt.subplots()
-        sns.histplot(synthetic_df['price_change'], kde=True, ax=ax) 
+        sns.histplot(main_data_df['price_change'], kde=True, ax=ax) 
         ax.set_title("Price Change Distribution")
         st.pyplot(fig)
     else:
-        st.warning("Column 'price_change' not found in synthetic data for histogram.")
+        st.warning("Column 'price_change' not found in main data for histogram.")
 
-    st.markdown("---") # Separator moved inside the block
+    st.markdown("---") 
 
 elif page == "Meme Gallery":
     st.header("🖼️ Meme Gallery")
@@ -201,7 +213,7 @@ elif page == "Meme Gallery":
     else:
         st.error(f"No images found in the '{image_folder}' folder. The download may have failed.")
 
-    st.markdown("---") # Separator moved inside the block
+    st.markdown("---") 
 
 elif page == "Trading Signals":
     st.header("🚦 Trading Signals")
@@ -213,7 +225,7 @@ elif page == "Trading Signals":
     else:
         st.error("Trading Signals data not loaded.")
 
-    st.markdown("---") # Separator moved inside the block
+    st.markdown("---") 
 
 elif page == "Model Insights":
     st.header("🧠 Model Insights")
@@ -225,6 +237,7 @@ elif page == "Model Insights":
         # Feature Importance
         st.subheader("Feature Importance")
         try:
+            # Assuming model is an XGBoost or similar object with feature_importances_
             feature_importances = pd.Series(model.feature_importances_, index=processed_data['features'])
             
             fig, ax = plt.subplots(figsize=(10, 6))
