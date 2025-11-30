@@ -19,9 +19,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- GOOGLE DRIVE FILE IDs ---
-# The File ID for  meme_images.zip
+# The File ID for your meme_images.zip (based on your original code)
 MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR" 
-# The File ID for processed_meme_data.pkl
+# The File ID for your processed_meme_data.pkl (based on your confirmed link)
 PROCESSED_DATA_FILE_ID = "1DSpPKfF_CAzpOaPTRATkC9YjWR_bFND-"
 # --- END FILE IDs ---
 
@@ -51,7 +51,6 @@ def download_meme_images(file_id):
     # Download zip file using the file ID
     try:
         logger.info("Downloading meme_images.zip from Google Drive with ID: %s", file_id)
-        # Using the robust gdown format with the file ID
         gdown.download(f"https://drive.google.com/uc?id={file_id}", output_zip, quiet=False)
     except Exception as e:
         st.error(f"Failed to download meme_images.zip (ID: {file_id}): {e}")
@@ -119,7 +118,6 @@ def download_processed_data(file_id):
 @st.cache_data
 def load_data(image_file_id, processed_file_id):
     try:
-        # NOTE: Assumes these CSV files are included locally in a 'data/' directory
         synthetic_df = pd.read_csv('data/synthetic_meme_dataset_with_images.csv')
         signals_df = pd.read_csv('data/tradeable_signals.csv')
         mapped_df = pd.read_csv('data/mapped_meme_data.csv')
@@ -169,7 +167,7 @@ if page == "Datasets":
     else:
         st.write(f"Processed data type: **{type(processed_data)}**")
 
----
+st.markdown("---") # Corrected separator
 
 elif page == "Visualizations":
     st.header("📉 Visualizations")
@@ -186,14 +184,13 @@ elif page == "Visualizations":
     st.subheader("Price Change Histogram")
     if 'price_change' in synthetic_df.columns:
         fig, ax = plt.subplots()
-        # Use log scale on y-axis for better visibility if data is heavily skewed
         sns.histplot(synthetic_df['price_change'], kde=True, ax=ax) 
         ax.set_title("Price Change Distribution")
         st.pyplot(fig)
     else:
         st.warning("Column 'price_change' not found in synthetic data for histogram.")
 
----
+st.markdown("---") # Corrected separator
 
 elif page == "Meme Gallery":
     st.header("🖼️ Meme Gallery")
@@ -221,7 +218,7 @@ elif page == "Meme Gallery":
     else:
         st.error(f"No images found in the '{image_folder}' folder. The download may have failed.")
 
----
+st.markdown("---") # Corrected separator
 
 elif page == "Trading Signals":
     st.header("🚦 Trading Signals")
@@ -233,7 +230,7 @@ elif page == "Trading Signals":
     else:
         st.error("Trading Signals data not loaded.")
 
----
+st.markdown("---") # Corrected separator
 
 elif page == "Model Insights":
     st.header("🧠 Model Insights")
