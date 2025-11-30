@@ -163,3 +163,4 @@ elif page == "Visualizations":
         fig, ax = plt.subplots()
         sns.histplot(synthetic_df['price_change'], kde=True, ax=ax)
         ax.set
+
