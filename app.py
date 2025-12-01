@@ -172,7 +172,6 @@ if page == "Datasets":
         
     st.markdown("---") 
 
----
 
 elif page == "Visualizations":
     st.header("📉 Visualizations")
@@ -425,3 +424,4 @@ elif page == "Model Insights":
         - **'y_pred'** (Predicted labels of the test set)
         - **'y_proba'** (Prediction probabilities for the positive class)
         """)
+
