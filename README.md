@@ -87,7 +87,7 @@ meme-stock-insights/
 - `requirements.txt` → 🛠️ Includes `streamlit`, `pandas`, `pillow`, `matplotlib`  
 - `data/mapped_meme_data.csv` → 📊 Processed meme stock data  
 - `data/processed_meme_data.pkl` → 🧠 Pickled data/model  
-- `data/synthetic_meme_dataset_with_images.csv` → 🖼️ Synthetic dataset with images  
+- `data/meme_dataset_with_images.csv` → 🖼️Dataset with images  
 - `data/tradeable_signals.csv` → 💹 Trading signals  
 - `meme_images/` → 🎨 Gallery of memes  
 
