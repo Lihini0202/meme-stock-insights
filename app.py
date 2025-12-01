@@ -9,6 +9,7 @@ import gdown
 import zipfile
 import xgboost as xgb
 import logging
+# --- NEW IMPORTS for Model Metrics ---
 from sklearn.metrics import confusion_matrix, roc_curve, auc, accuracy_score, precision_score, recall_score, f1_score
 # -------------------------------------
 
@@ -55,7 +56,6 @@ def download_meme_images(file_id):
     if os.path.exists(output_zip):
         try:
             with zipfile.ZipFile(output_zip, 'r') as zip_ref:
-                # Ensure the folder exists before extraction
                 os.makedirs(output_folder, exist_ok=True)
                 zip_ref.extractall(output_folder)
             st.success(f"Extracted images to {output_folder}/")
@@ -109,7 +109,7 @@ def download_processed_data(file_id):
 @st.cache_data
 def load_data(image_file_id, processed_file_id):
     try:
-        # NOTE: Assumes these CSV files are present locally in a 'data/' directory.
+        # Load the CSV files
         main_data_df = pd.read_csv('data/meme_dataset_with_images.csv')
         signals_df = pd.read_csv('data/tradeable_signals.csv')
         mapped_df = pd.read_csv('data/mapped_meme_data.csv')
@@ -118,6 +118,22 @@ def load_data(image_file_id, processed_file_id):
         logger.error("Error loading CSV files: %s", str(e))
         return None, None, None, None
     
+    # ⭐ CRITICAL FIX: RENAME COLUMNS FOR VISUALIZATIONS ⭐
+    # YOU MUST REPLACE THE PLACEHOLDER NAMES (e.g., 'Actual_Ticker') 
+    # with the EXACT names of the columns found in your 'meme_dataset_with_images.csv'
+    try:
+        main_data_df.rename(columns={
+            # Rename your actual Ticker/Symbol column to 'stock_ticker'
+            'TICKER': 'stock_ticker',       # <--- REPLACE 'TICKER'
+            # Rename your actual Price Change column to 'price_change'
+            'DAILY_CHANGE_PCT': 'price_change', # <--- REPLACE 'DAILY_CHANGE_PCT'
+            # Rename your actual Date/Timestamp column to 'date'
+            'DATE_COLUMN': 'date'            # <--- REPLACE 'DATE_COLUMN'
+        }, inplace=True)
+    except KeyError as e:
+        st.warning(f"Failed to find and rename a required column: {e}. Please check your CSV file column names.")
+        # We proceed, but visualizations may still fail if required columns are missing/misnamed.
+        
     # Processed data must be downloaded/loaded
     processed_data = download_processed_data(processed_file_id)
     
@@ -129,7 +145,6 @@ if image_folder is None:
     st.warning("Could not download meme images. Displaying locally if available.")
     image_folder = "meme_images"
 
-# Create data directory if it doesn't exist to prevent errors in load_data
 os.makedirs("data", exist_ok=True)
 main_data_df, signals_df, mapped_df, processed_data = load_data(MEME_IMAGE_FILE_ID, PROCESSED_DATA_FILE_ID)
 
@@ -143,6 +158,9 @@ if page == "Datasets":
     st.header("📊 Datasets Overview")
     
     st.subheader("Main Meme Stock Data")
+    # Add column check for debugging
+    st.write("Current Columns in main_data_df:")
+    st.code(main_data_df.columns.tolist())
     st.dataframe(main_data_df.head(10))
     
     st.subheader("Mapped Meme Data")
@@ -162,13 +180,14 @@ if page == "Datasets":
         
     st.markdown("---") 
 
+# ----------------------------------------------------------------------
+# MODIFIED VISUALIZATIONS SECTION (Smaller size, 4 plots)
+# ----------------------------------------------------------------------
 elif page == "Visualizations":
     st.header("📉 Visualizations")
     st.markdown("Exploring key distributions and trends in the dataset.")
     
-    # ------------------------------------------------
-    # ROW 1: Sentiment Distribution and Price Change Histogram
-    # ------------------------------------------------
+    # Row 1: Sentiment Distribution and Price Change Histogram
     col1, col2 = st.columns(2)
     
     # 1. Sentiment Distribution (Count Plot)
@@ -200,16 +219,14 @@ elif page == "Visualizations":
             except Exception as e:
                 st.error(f"Error generating Price Change Histogram: {e}")
         else:
-            st.warning("Column 'price_change' not found in main data.")
+            st.warning("Column 'price_change' not found in main data. Please rename your price change column.")
 
     st.markdown("---") 
 
-    # ------------------------------------------------
-    # ROW 2: NEW Visualizations
-    # ------------------------------------------------
+    # Row 2: Average Change by Stock and Price Trend Sample
     col3, col4 = st.columns(2)
 
-    # 3. NEW: Average Price Change by Stock (Bar Plot)
+    # 3. Average Price Change by Stock (Bar Plot)
     with col3:
         st.subheader("3. Average Daily Change by Stock")
         if 'stock_ticker' in main_data_df.columns and 'price_change' in main_data_df.columns:
@@ -226,23 +243,21 @@ elif page == "Visualizations":
             except Exception as e:
                 st.error(f"Error generating Average Change by Stock: {e}")
         else:
-            st.warning("Required columns 'stock_ticker' or 'price_change' not found for Bar Plot.")
+            st.warning("Required columns 'stock_ticker' or 'price_change' not found for Bar Plot. Check renaming.")
 
-    # 4. NEW: Price Trend Over Time (Line Plot - requires 'date' or similar)
+    # 4. Price Trend Over Time (Line Plot)
     with col4:
         st.subheader("4. Price Trend Sample")
-        # Check for a suitable date/time column (assuming 'date' or similar exists)
-        date_col = 'date' if 'date' in main_data_df.columns else None
+        date_col = 'date' 
         
-        if date_col and 'price_change' in main_data_df.columns and 'stock_ticker' in main_data_df.columns:
+        if date_col in main_data_df.columns and 'price_change' in main_data_df.columns and 'stock_ticker' in main_data_df.columns:
             try:
-                # Prepare data: convert date and resample (assuming date is a column)
                 df_plot = main_data_df.copy()
                 df_plot[date_col] = pd.to_datetime(df_plot[date_col], errors='coerce')
                 df_plot = df_plot.dropna(subset=[date_col]).set_index(date_col)
                 
                 # Plot the rolling average of price change for a sample stock
-                sample_ticker = df_plot['stock_ticker'].iloc[0] # Get the first ticker in the dataset
+                sample_ticker = df_plot['stock_ticker'].iloc[0] # Get the first ticker
                 
                 trend_data = df_plot[df_plot['stock_ticker'] == sample_ticker]['price_change'].rolling(window=7).mean().dropna()
                 
@@ -259,9 +274,10 @@ elif page == "Visualizations":
             except Exception as e:
                 st.error(f"Error generating Price Trend Sample: {e}")
         else:
-            st.warning("Required columns 'date' or 'price_change' or 'stock_ticker' not found for Trend Plot.")
+            st.warning("Required columns 'date', 'price_change', or 'stock_ticker' not found for Trend Plot. Check renaming.")
 
     st.markdown("---") 
+# ----------------------------------------------------------------------
 
 elif page == "Meme Gallery":
     st.header("🖼️ Meme Gallery")
@@ -275,9 +291,8 @@ elif page == "Meme Gallery":
     if image_files:
         st.info(f"Loaded {len(image_files)} images from the `{image_folder}` folder.")
         
-        # Use columns for a grid layout
         cols = st.columns(4)
-        for i, filename in enumerate(image_files[:12]): # Display first 12 images
+        for i, filename in enumerate(image_files[:12]):
             try:
                 img_path = os.path.join(image_folder, filename)
                 image = Image.open(img_path)
@@ -307,7 +322,6 @@ elif page == "Model Insights":
     st.header("🧠 Model Insights")
     st.markdown("Feature importance and model performance metrics.")
     
-    # Check for model, features, and the necessary test data
     required_keys = ['model', 'features', 'y_test', 'y_pred', 'y_proba']
     if (isinstance(processed_data, dict) and 
         all(key in processed_data for key in required_keys)):
@@ -317,10 +331,9 @@ elif page == "Model Insights":
         y_pred = processed_data['y_pred']
         y_proba = processed_data['y_proba']
         
-        # Calculate ROC AUC here, as it's needed for the table and plot
+        # Calculate ROC AUC
         fpr, tpr, _ = roc_curve(y_test, y_proba)
         roc_auc = auc(fpr, tpr)
-
 
         # --- ROW 1: Feature Importance ---
         st.subheader("Feature Importance")
