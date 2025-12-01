@@ -278,7 +278,7 @@ elif page == "Visualizations":
 
     st.markdown("---") 
 
----
+
 
 elif page == "Meme Gallery":
     st.header("🖼️ Meme Gallery")
@@ -424,4 +424,5 @@ elif page == "Model Insights":
         - **'y_pred'** (Predicted labels of the test set)
         - **'y_proba'** (Prediction probabilities for the positive class)
         """)
+
 
