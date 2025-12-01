@@ -70,42 +70,35 @@ meme-stock-insights/
 3. Run the application:
    ```bash
    streamlit run app.py
-  ```
+   ```
 
-☁️ Deployment on Streamlit Cloud 🌍
+## ☁️ Deployment on Streamlit Cloud 🌍
 
-Deploying Meme Stock Insights is quick and effortless:
+Deploying **Meme Stock Insights** is simple and fast:
 
-Commit & Push
-Ensure all updates — especially app.py and requirements.txt — are pushed to your GitHub repository.
+1. **Commit & Push Your Code**
+   Make sure all updates — especially `app.py` and `requirements.txt` — are pushed to your GitHub repository.
 
-Connect to Streamlit Cloud
-Log in to share.streamlit.io, select your repository, and choose your deployment branch.
+2. **Connect Your Repo on Streamlit Cloud**
+   Go to **[https://share.streamlit.io](https://share.streamlit.io)**, log in, and select your GitHub repository for deployment.
 
-Automatic Setup
-Streamlit Cloud will:
+3. **Automatic Environment Setup**
+   Streamlit Cloud will automatically:
 
-Install all dependencies listed in requirements.txt
+   * Install dependencies from `requirements.txt`
+   * Download meme images and dataset files using Google Drive File IDs in `app.py`
+   * Build and launch the dashboard
 
-Download meme images and data files using the Google Drive File IDs embedded in app.py
+4. **Deploy & Share**
+   Once the build completes, Streamlit provides a **public shareable link** to your live dashboard.
 
-Build the dashboard automatically
+---
 
-Launch & Share
-Once deployed, your app will generate a public shareable link so others can explore your insights in real time.
+## 🙌 Acknowledgments
 
-✨ That's it — zero-configuration deployment!
+Built with:
 
-🙌 Acknowledgments
-
-This project is proudly built with:
-
-❤️ Streamlit for the interactive dashboard UI
-
-📊 Plotly for engaging, high-quality visualizations
-
-🧪 scikit-learn and Colab notebooks for model training and data processing
-
-🚀 Inspired by the dynamic, unpredictable, and electrifying world of meme stocks
-
-Thank you for exploring Meme Stock Insights! 🎉📈🌕
+* ❤️ **Streamlit** for building a clean, modern dashboard UI
+* 📊 **Plotly** for interactive, high-quality visualizations
+* 🤖 **Google Colab + scikit-learn** for model training and data preparation
+* 🚀 Inspired by the exciting, unpredictable world of **meme stocks**
