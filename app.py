@@ -16,9 +16,9 @@ from sklearn.metrics import confusion_matrix, roc_curve, auc, accuracy_score, pr
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- GOOGLE DRIVE FILE IDs --- https://drive.google.com/drive/folders/1FHq8XSdZsu4_WFEV0o_sJZ2YSMcJVWd2?usp=sharing  https://drive.google.com/drive/folders/1FHq8XSdZsu4_WFEV0o_sJZ2YSMcJVWd2?usp=drive_link
+# --- GOOGLE DRIVE FILE IDs ---  
 
-MEME_IMAGE_FILE_ID = "1FHq8XSdZsu4_WFEV0o_sJZ2YSMcJVWd2" 
+MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR" 
 PROCESSED_DATA_FILE_ID = "1TBIKxWxPeF6e70Y0NybPVFjKaMW8pCz3"
 # --- END FILE IDs ---
 
