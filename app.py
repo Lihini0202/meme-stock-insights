@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 # Set page config for a cleaner, wider layout
 st.set_page_config(page_title="Meme Stock Insights", layout="wide", initial_sidebar_state="expanded")
 
-# NOTE: Replace these with your actual, publicly shared Google Drive IDs.
 MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR"
-PROCESCESSED_DATA_FILE_ID = "1TBIKxWxPeF6e70Y0NybPVFjKaMW8pCz3"
+# FIX APPLIED HERE: Variable name corrected to PROCESSED_DATA_FILE_ID
+PROCESSED_DATA_FILE_ID = "1TBIKxWxPeF6e70Y0NybPVFjKaMW8pCz3"
 # --- END FILE IDs ---
 
 # --- Data Download Functions ---
