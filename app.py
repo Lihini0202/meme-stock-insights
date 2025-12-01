@@ -118,21 +118,18 @@ def load_data(image_file_id, processed_file_id):
         logger.error("Error loading CSV files: %s", str(e))
         return None, None, None, None
     
-    # ⭐ CRITICAL FIX: RENAME COLUMNS FOR VISUALIZATIONS ⭐
-    # YOU MUST REPLACE THE PLACEHOLDER NAMES (e.g., 'Actual_Ticker') 
-    # with the EXACT names of the columns found in your 'meme_dataset_with_images.csv'
+    # ⭐ CRITICAL FIX: RENAME COLUMNS based on user input ⭐
+    # Mapping 'ticker' -> 'stock_ticker' and 'timestamp' -> 'date'
     try:
         main_data_df.rename(columns={
-            # Rename your actual Ticker/Symbol column to 'stock_ticker'
-            'TICKER': 'stock_ticker',       # <--- REPLACE 'TICKER'
-            # Rename your actual Price Change column to 'price_change'
-            'DAILY_CHANGE_PCT': 'price_change', # <--- REPLACE 'DAILY_CHANGE_PCT'
-            # Rename your actual Date/Timestamp column to 'date'
-            'DATE_COLUMN': 'date'            # <--- REPLACE 'DATE_COLUMN'
+            # 1. Rename 'ticker' to 'stock_ticker'
+            'ticker': 'stock_ticker',       
+            # 2. 'price_change' is already correct, no rename needed here.
+            # 3. Rename 'timestamp' to 'date'
+            'timestamp': 'date'            
         }, inplace=True)
     except KeyError as e:
-        st.warning(f"Failed to find and rename a required column: {e}. Please check your CSV file column names.")
-        # We proceed, but visualizations may still fail if required columns are missing/misnamed.
+        st.warning(f"Failed to find and rename a required column: {e}. Please ensure 'ticker' and 'timestamp' are in your CSV.")
         
     # Processed data must be downloaded/loaded
     processed_data = download_processed_data(processed_file_id)
@@ -158,7 +155,6 @@ if page == "Datasets":
     st.header("📊 Datasets Overview")
     
     st.subheader("Main Meme Stock Data")
-    # Add column check for debugging
     st.write("Current Columns in main_data_df:")
     st.code(main_data_df.columns.tolist())
     st.dataframe(main_data_df.head(10))
@@ -181,7 +177,7 @@ if page == "Datasets":
     st.markdown("---") 
 
 # ----------------------------------------------------------------------
-# MODIFIED VISUALIZATIONS SECTION (Smaller size, 4 plots)
+# MODIFIED VISUALIZATIONS SECTION (Expected to now work)
 # ----------------------------------------------------------------------
 elif page == "Visualizations":
     st.header("📉 Visualizations")
@@ -219,7 +215,7 @@ elif page == "Visualizations":
             except Exception as e:
                 st.error(f"Error generating Price Change Histogram: {e}")
         else:
-            st.warning("Column 'price_change' not found in main data. Please rename your price change column.")
+            st.warning("Column 'price_change' not found in main data. (Should be present if data loaded correctly).")
 
     st.markdown("---") 
 
@@ -231,7 +227,6 @@ elif page == "Visualizations":
         st.subheader("3. Average Daily Change by Stock")
         if 'stock_ticker' in main_data_df.columns and 'price_change' in main_data_df.columns:
             try:
-                # Group and calculate mean, then limit to top 10 for cleaner display
                 avg_change = main_data_df.groupby('stock_ticker')['price_change'].mean().sort_values(ascending=False).head(10)
                 fig_bar, ax_bar = plt.subplots(figsize=(6, 4)) # Smaller figure size
                 sns.barplot(x=avg_change.index, y=avg_change.values, ax=ax_bar, palette='coolwarm')
