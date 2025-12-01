@@ -20,11 +20,8 @@ import plotly.graph_objects as go
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# --- GOOGLE DRIVE FILE IDs --- 
-
-MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR" 
+MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR"
 PROCESSED_DATA_FILE_ID = "1TBIKxWxPeF6e70Y0NybPVFjKaMW8pCz3"
-# --- END FILE IDs ---
 
 # Set page config
 st.set_page_config(page_title="Meme Stock Insights", layout="wide")
@@ -444,4 +441,5 @@ elif page == "🧠 Model Insights":
         - **'y_pred'** (Predicted labels of the test set)
         - **'y_proba'** (Prediction probabilities for the positive class)
         """)
+
 
