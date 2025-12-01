@@ -9,7 +9,6 @@ import gdown
 import zipfile
 import xgboost as xgb
 import logging
-# --- NEW IMPORTS for Model Metrics ---
 from sklearn.metrics import confusion_matrix, roc_curve, auc, accuracy_score, precision_score, recall_score, f1_score
 # -------------------------------------
 
@@ -18,6 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- GOOGLE DRIVE FILE IDs --- 
+# NOTE: Replace these with your actual, publicly shared Google Drive IDs.
 MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR" 
 PROCESSED_DATA_FILE_ID = "1TBIKxWxPeF6e70Y0NybPVFjKaMW8pCz3"
 # --- END FILE IDs ---
@@ -55,6 +55,8 @@ def download_meme_images(file_id):
     if os.path.exists(output_zip):
         try:
             with zipfile.ZipFile(output_zip, 'r') as zip_ref:
+                # Ensure the folder exists before extraction
+                os.makedirs(output_folder, exist_ok=True)
                 zip_ref.extractall(output_folder)
             st.success(f"Extracted images to {output_folder}/")
             logger.info("Extracted meme_images.zip to %s", output_folder)
@@ -107,14 +109,16 @@ def download_processed_data(file_id):
 @st.cache_data
 def load_data(image_file_id, processed_file_id):
     try:
+        # NOTE: Assumes these CSV files are present locally in a 'data/' directory.
         main_data_df = pd.read_csv('data/meme_dataset_with_images.csv')
         signals_df = pd.read_csv('data/tradeable_signals.csv')
         mapped_df = pd.read_csv('data/mapped_meme_data.csv')
     except FileNotFoundError as e:
         st.error(f"Error loading CSV files: {e}. Ensure data files are in the 'data/' folder.")
         logger.error("Error loading CSV files: %s", str(e))
-        return None, None, None, None, None
+        return None, None, None, None
     
+    # Processed data must be downloaded/loaded
     processed_data = download_processed_data(processed_file_id)
     
     return main_data_df, signals_df, mapped_df, processed_data
@@ -125,6 +129,8 @@ if image_folder is None:
     st.warning("Could not download meme images. Displaying locally if available.")
     image_folder = "meme_images"
 
+# Create data directory if it doesn't exist to prevent errors in load_data
+os.makedirs("data", exist_ok=True)
 main_data_df, signals_df, mapped_df, processed_data = load_data(MEME_IMAGE_FILE_ID, PROCESSED_DATA_FILE_ID)
 
 if main_data_df is None or processed_data is None:
@@ -158,24 +164,102 @@ if page == "Datasets":
 
 elif page == "Visualizations":
     st.header("📉 Visualizations")
+    st.markdown("Exploring key distributions and trends in the dataset.")
     
-    # Sentiment Distribution
-    st.subheader("Sentiment Distribution (Main Data)")
-    if 'sentiment' in main_data_df.columns:
-        fig, ax = plt.subplots()
-        sns.countplot(x='sentiment', data=main_data_df, ax=ax)
-        ax.set_title("Sentiment Distribution")
-        st.pyplot(fig)
+    # ------------------------------------------------
+    # ROW 1: Sentiment Distribution and Price Change Histogram
+    # ------------------------------------------------
+    col1, col2 = st.columns(2)
     
-    # Price Change Histogram
-    st.subheader("Price Change Histogram")
-    if 'price_change' in main_data_df.columns:
-        fig, ax = plt.subplots()
-        sns.histplot(main_data_df['price_change'], kde=True, ax=ax) 
-        ax.set_title("Price Change Distribution")
-        st.pyplot(fig)
-    else:
-        st.warning("Column 'price_change' not found in main data for histogram.")
+    # 1. Sentiment Distribution (Count Plot)
+    with col1:
+        st.subheader("1. Sentiment Distribution")
+        if 'sentiment' in main_data_df.columns:
+            try:
+                fig, ax = plt.subplots(figsize=(6, 4)) # Smaller figure size
+                sns.countplot(x='sentiment', data=main_data_df, ax=ax, palette='viridis')
+                ax.set_title("Reddit Post Sentiment Distribution")
+                ax.set_ylabel("Count")
+                st.pyplot(fig)
+            except Exception as e:
+                st.error(f"Error generating Sentiment Distribution: {e}")
+        else:
+            st.warning("Column 'sentiment' not found in main data.")
+    
+    # 2. Price Change Histogram
+    with col2:
+        st.subheader("2. Price Change Histogram")
+        if 'price_change' in main_data_df.columns:
+            try:
+                fig, ax = plt.subplots(figsize=(6, 4)) # Smaller figure size
+                # Limit range for better visibility and avoid extreme outliers
+                sns.histplot(main_data_df['price_change'].clip(lower=-0.5, upper=0.5), kde=True, ax=ax, bins=30) 
+                ax.set_title("Capped Price Change Distribution (-50% to +50%)")
+                ax.set_xlabel("Daily Price Change")
+                st.pyplot(fig)
+            except Exception as e:
+                st.error(f"Error generating Price Change Histogram: {e}")
+        else:
+            st.warning("Column 'price_change' not found in main data.")
+
+    st.markdown("---") 
+
+    # ------------------------------------------------
+    # ROW 2: NEW Visualizations
+    # ------------------------------------------------
+    col3, col4 = st.columns(2)
+
+    # 3. NEW: Average Price Change by Stock (Bar Plot)
+    with col3:
+        st.subheader("3. Average Daily Change by Stock")
+        if 'stock_ticker' in main_data_df.columns and 'price_change' in main_data_df.columns:
+            try:
+                # Group and calculate mean, then limit to top 10 for cleaner display
+                avg_change = main_data_df.groupby('stock_ticker')['price_change'].mean().sort_values(ascending=False).head(10)
+                fig_bar, ax_bar = plt.subplots(figsize=(6, 4)) # Smaller figure size
+                sns.barplot(x=avg_change.index, y=avg_change.values, ax=ax_bar, palette='coolwarm')
+                ax_bar.set_title("Top 10 Avg. Price Change by Ticker")
+                ax_bar.set_xlabel("Stock Ticker")
+                ax_bar.set_ylabel("Avg. Price Change")
+                ax_bar.tick_params(axis='x', rotation=45)
+                st.pyplot(fig_bar)
+            except Exception as e:
+                st.error(f"Error generating Average Change by Stock: {e}")
+        else:
+            st.warning("Required columns 'stock_ticker' or 'price_change' not found for Bar Plot.")
+
+    # 4. NEW: Price Trend Over Time (Line Plot - requires 'date' or similar)
+    with col4:
+        st.subheader("4. Price Trend Sample")
+        # Check for a suitable date/time column (assuming 'date' or similar exists)
+        date_col = 'date' if 'date' in main_data_df.columns else None
+        
+        if date_col and 'price_change' in main_data_df.columns and 'stock_ticker' in main_data_df.columns:
+            try:
+                # Prepare data: convert date and resample (assuming date is a column)
+                df_plot = main_data_df.copy()
+                df_plot[date_col] = pd.to_datetime(df_plot[date_col], errors='coerce')
+                df_plot = df_plot.dropna(subset=[date_col]).set_index(date_col)
+                
+                # Plot the rolling average of price change for a sample stock
+                sample_ticker = df_plot['stock_ticker'].iloc[0] # Get the first ticker in the dataset
+                
+                trend_data = df_plot[df_plot['stock_ticker'] == sample_ticker]['price_change'].rolling(window=7).mean().dropna()
+                
+                fig_line, ax_line = plt.subplots(figsize=(6, 4)) # Smaller figure size
+                ax_line.plot(trend_data.index, trend_data.values, label=f'7-Day Rolling Avg. Price Change ({sample_ticker})')
+                ax_line.axhline(0, color='red', linestyle='--', linewidth=0.5)
+                ax_line.set_title(f"Price Change Trend for {sample_ticker}")
+                ax_line.set_xlabel("Date")
+                ax_line.set_ylabel("Rolling Avg. Change")
+                fig_line.autofmt_xdate()
+                ax_line.legend()
+                st.pyplot(fig_line)
+
+            except Exception as e:
+                st.error(f"Error generating Price Trend Sample: {e}")
+        else:
+            st.warning("Required columns 'date' or 'price_change' or 'stock_ticker' not found for Trend Plot.")
 
     st.markdown("---") 
 
@@ -191,8 +275,9 @@ elif page == "Meme Gallery":
     if image_files:
         st.info(f"Loaded {len(image_files)} images from the `{image_folder}` folder.")
         
+        # Use columns for a grid layout
         cols = st.columns(4)
-        for i, filename in enumerate(image_files[:12]):
+        for i, filename in enumerate(image_files[:12]): # Display first 12 images
             try:
                 img_path = os.path.join(image_folder, filename)
                 image = Image.open(img_path)
@@ -231,6 +316,11 @@ elif page == "Model Insights":
         y_test = processed_data['y_test']
         y_pred = processed_data['y_pred']
         y_proba = processed_data['y_proba']
+        
+        # Calculate ROC AUC here, as it's needed for the table and plot
+        fpr, tpr, _ = roc_curve(y_test, y_proba)
+        roc_auc = auc(fpr, tpr)
+
 
         # --- ROW 1: Feature Importance ---
         st.subheader("Feature Importance")
@@ -270,8 +360,6 @@ elif page == "Model Insights":
         with col2:
             st.subheader("ROC Curve")
             try:
-                fpr, tpr, _ = roc_curve(y_test, y_proba)
-                roc_auc = auc(fpr, tpr)
                 
                 fig_roc, ax_roc = plt.subplots(figsize=(6, 5))
                 ax_roc.plot(fpr, tpr, label=f'ROC Curve (AUC = {roc_auc:.2f})')
@@ -318,4 +406,3 @@ elif page == "Model Insights":
         - **'y_pred'** (Predicted labels of the test set)
         - **'y_proba'** (Prediction probabilities for the positive class)
         """)
-
