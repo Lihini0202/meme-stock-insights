@@ -62,34 +62,50 @@ meme-stock-insights/
    ```bash
    git clone [https://github.com/Lihini0202/meme-stock-insights.git](https://github.com/Lihini0202/meme-stock-insights.git)
    cd meme-stock-insights
-   
+   ```
 2. Install all required dependencies (including Plotly and scikit-learn):
- ```bash
-  pip install -r requirements.txt
-```
+   ```bash
+   pip install -r requirements.txt
+   ```
 3. Run the application:
- ```bash
-streamlit run app.py
- ```
+   ```bash
+   streamlit run app.py
+  ```
 
 ☁️ Deployment on Streamlit Cloud 🌍
 
-The application is designed for easy deployment:
+Deploying Meme Stock Insights is quick and effortless:
 
-Commit and push all changes (especially app.py and requirements.txt) to your GitHub repository.
+Commit & Push
+Ensure all updates — especially app.py and requirements.txt — are pushed to your GitHub repository.
 
-Connect to your repository from Streamlit Cloud.
+Connect to Streamlit Cloud
+Log in to share.streamlit.io, select your repository, and choose your deployment branch.
 
-Streamlit Cloud will use requirements.txt to install all necessary libraries and automatically download the data from the Google Drive IDs specified in app.py.
+Automatic Setup
+Streamlit Cloud will:
 
-Deploy and share your insights!
+Install all dependencies listed in requirements.txt
 
+Download meme images and data files using the Google Drive File IDs embedded in app.py
 
-🙌 Acknowledgments 💖
-Built with ❤️ using Streamlit for the dashboard UI.
+Build the dashboard automatically
 
-Visualizations powered by Plotly for maximum interactivity.
+Launch & Share
+Once deployed, your app will generate a public shareable link so others can explore your insights in real time.
 
-Model development and data processing crafted in Google Colab.
+✨ That's it — zero-configuration deployment!
 
-Inspired by the volatile and exciting world of meme stocks 📈🚀🌕
+🙌 Acknowledgments
+
+This project is proudly built with:
+
+❤️ Streamlit for the interactive dashboard UI
+
+📊 Plotly for engaging, high-quality visualizations
+
+🧪 scikit-learn and Colab notebooks for model training and data processing
+
+🚀 Inspired by the dynamic, unpredictable, and electrifying world of meme stocks
+
+Thank you for exploring Meme Stock Insights! 🎉📈🌕
