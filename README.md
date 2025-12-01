@@ -33,9 +33,9 @@ This application employs several modern Streamlit and Python techniques to ensur
 * **Model Probability Handling (The Fix):** The "Model Insights" section includes crucial logic to robustly handle the `y_proba` array saved from the model. It automatically checks if the array is saved as a **one-column** (positive class probability only) or **two-column** (all class probabilities) format to prevent the common `IndexError` during the calculation of the **ROC Curve and AUC**.
 * **Modern UI Components:** The application utilizes native Streamlit components like `st.set_page_config(layout="wide")`, `st.tabs`, and `st.metric` to create a clean, modern dashboard aesthetic with organized, segmented content.
 
----
+## 📂 Folder Structure
 
-📂 Folder Structure
+```
 meme-stock-insights/
 ├── app.py                      # 🌟 Main Streamlit dashboard
 ├── requirements.txt            # 📦 Dependencies (plotly, gdown, scikit-learn, etc.)
@@ -46,8 +46,9 @@ meme-stock-insights/
 │   └── tradeable_signals.csv               # Generated trading signals
 ├── meme_images/                # 🎨 Folder for downloaded meme images
 │   └── (e.g., GME_meme.png)
-└── README.md      
----
+└── README.md                   # 📖 Project guide
+```
+
 
 ## 🛠️ Setup & Local Installation ⚡
 
@@ -61,13 +62,13 @@ meme-stock-insights/
    ```bash
    git clone [https://github.com/Lihini0202/meme-stock-insights.git](https://github.com/Lihini0202/meme-stock-insights.git)
    cd meme-stock-insights
-   ```
+   
 2. Install all required dependencies (including Plotly and scikit-learn):
-   ```bash
+ ```bash
   pip install -r requirements.txt
-  ```
+```
 3. Run the application:
-   ```bash
+ ```bash
 streamlit run app.py
  ```
 
