@@ -5,10 +5,10 @@ import pickle
 import gdown
 import zipfile
 import logging
-import plotly.express as px # Replaced Matplotlib/Seaborn imports for modern interactivity
+import plotly.express as px
 from PIL import Image
 from sklearn.metrics import confusion_matrix, roc_curve, auc, accuracy_score, precision_score, recall_score, f1_score
-import numpy as np # Added for metrics table formatting
+import numpy as np 
 # -------------------------------------
 
 # Set up logging
@@ -19,11 +19,12 @@ logger = logging.getLogger(__name__)
 # Set page config for a cleaner, wider layout
 st.set_page_config(page_title="Meme Stock Insights", layout="wide", initial_sidebar_state="expanded")
 
+# NOTE: Replace these with your actual, publicly shared Google Drive IDs.
 MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR"
-PROCESSED_DATA_FILE_ID = "1TBIKxWxPeF6e70Y0NybPVFjKaMW8pCz3"
+PROCESCESSED_DATA_FILE_ID = "1TBIKxWxPeF6e70Y0NybPVFjKaMW8pCz3"
 # --- END FILE IDs ---
 
-# --- Data Download Functions (Unchanged) ---
+# --- Data Download Functions ---
 @st.cache_resource
 def download_meme_images(file_id):
     output_zip = "meme_image.zip"
@@ -88,7 +89,7 @@ def download_processed_data(file_id):
         logger.error("Pickle file not found: %s", output_file)
         return None
 
-# --- Data Loading and Initialization (Unchanged) ---
+# --- Data Loading and Initialization ---
 @st.cache_data
 def load_data(image_file_id, processed_file_id):
     try:
@@ -141,7 +142,6 @@ page = st.sidebar.radio("Select Section", [
     "Upload & Explore", 
     "Model Insights"
 ])
-
 
 # --- APPLICATION SECTIONS ---
 
@@ -355,14 +355,31 @@ elif page == "Model Insights":
         model = processed_data['model']
         y_test = processed_data['y_test']
         y_pred = processed_data['y_pred']
-        y_proba = processed_data['y_proba'][:, 1] # Probability for the positive class
+        y_proba = processed_data['y_proba']
+        
+        # --- CRITICAL FIX FOR INDEXERROR ---
+        # Checks the shape of y_proba to handle both 1-column and 2-column formats
+        try:
+            if len(y_proba.shape) == 2 and y_proba.shape[1] == 2:
+                # Standard format: [:, 0] is proba for class 0, [:, 1] is proba for class 1
+                y_proba_positive = y_proba[:, 1] 
+            elif len(y_proba.shape) == 1 or (len(y_proba.shape) == 2 and y_proba.shape[1] == 1):
+                # Saved as 1-column array (already positive probability)
+                y_proba_positive = y_proba.flatten() 
+            else:
+                st.error("Model probabilities are in an unexpected format. Cannot calculate ROC AUC.")
+                st.stop()
+        except AttributeError:
+             st.error("Model probabilities ('y_proba') is not a valid numpy array. Cannot calculate ROC AUC.")
+             st.stop()
+        # -----------------------------------
         
         # Calculate scores
         accuracy = accuracy_score(y_test, y_pred)
         precision = precision_score(y_test, y_pred, zero_division=0)
         recall = recall_score(y_test, y_pred, zero_division=0)
         f1 = f1_score(y_test, y_pred, zero_division=0)
-        fpr, tpr, _ = roc_curve(y_test, y_proba)
+        fpr, tpr, _ = roc_curve(y_test, y_proba_positive) # Use the corrected array
         roc_auc = auc(fpr, tpr)
         
         # --- Row 1: Key Performance Metrics ---
@@ -432,7 +449,7 @@ elif page == "Model Insights":
                 fig_roc = px.area(
                     x=fpr, 
                     y=tpr, 
-                    title=f'ROC Curve (AUC={roc_auc:.2f})', 
+                    title=f'ROC Curve (AUC={roc_auc:.3f})', 
                     labels=dict(x='False Positive Rate', y='True Positive Rate'),
                     width=600, height=500
                 )
@@ -454,5 +471,7 @@ elif page == "Model Insights":
         - **'features'** (List of feature names)
         - **'y_test'** (True labels of the test set)
         - **'y_pred'** (Predicted labels of the test set)
-        - **'y_proba'** (Prediction probabilities for *both* classes)
+        - **'y_proba'** (Prediction probabilities - either 1 or 2 columns)
+        
+        **Action Required:** If you see this warning, please ensure your model training notebook is saved correctly and the file is accessible via the Google Drive ID.
         """)
