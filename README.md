@@ -27,10 +27,10 @@ meme-stock-insights/
 ├── data/                          # 💾 Data files hub
 │   ├── mapped_meme_data.csv             # 📋 Processed meme data
 │   ├── processed_meme_data.pkl          # 🧠 Pickled data/model
-│   ├── synthetic_meme_dataset_with_images.csv  # 🖼️ Synthetic data with images
+│   ├── meme_dataset_with_images.csv  # 🖼️ Data with images
 │   └── tradeable_signals.csv            # 💹 Trading signals
 ├── meme_images/                   # 🎨 Meme image collection
-│   ├── (e.g., GME_meme.png)             # 🖼️ Pre-generated images
+│   ├── (e.g., GME_meme.png)             
 └── README.md                      # 📖 This awesome guide
 ```
 
