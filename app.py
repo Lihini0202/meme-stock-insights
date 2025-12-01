@@ -16,11 +16,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- CONFIGURATION & FILE IDs ---
-# Set page config for a cleaner, wider layout
+
 st.set_page_config(page_title="Meme Stock Insights", layout="wide", initial_sidebar_state="expanded")
 
 MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR"
-# FIX APPLIED HERE: Variable name corrected to PROCESSED_DATA_FILE_ID
 PROCESSED_DATA_FILE_ID = "1TBIKxWxPeF6e70Y0NybPVFjKaMW8pCz3"
 # --- END FILE IDs ---
 
@@ -357,7 +356,7 @@ elif page == "Model Insights":
         y_pred = processed_data['y_pred']
         y_proba = processed_data['y_proba']
         
-        # --- CRITICAL FIX FOR INDEXERROR ---
+  
         # Checks the shape of y_proba to handle both 1-column and 2-column formats
         try:
             if len(y_proba.shape) == 2 and y_proba.shape[1] == 2:
@@ -379,7 +378,7 @@ elif page == "Model Insights":
         precision = precision_score(y_test, y_pred, zero_division=0)
         recall = recall_score(y_test, y_pred, zero_division=0)
         f1 = f1_score(y_test, y_pred, zero_division=0)
-        fpr, tpr, _ = roc_curve(y_test, y_proba_positive) # Use the corrected array
+        fpr, tpr, _ = roc_curve(y_test, y_proba_positive) 
         roc_auc = auc(fpr, tpr)
         
         # --- Row 1: Key Performance Metrics ---
@@ -475,3 +474,4 @@ elif page == "Model Insights":
         
         **Action Required:** If you see this warning, please ensure your model training notebook is saved correctly and the file is accessible via the Google Drive ID.
         """)
+
