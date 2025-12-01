@@ -29,13 +29,21 @@ st.set_page_config(page_title="Meme Stock Insights", layout="wide")
 st.title("📈 Meme Stock Insights Dashboard")
 st.markdown("""
 This app provides insights into meme stocks based on real-world and processed data.
-Explore datasets, visualizations, trading signals, and model insights.
+Explore datasets, visualizations, and model insights.
 Meme images and processed data are downloaded from Google Drive due to size constraints.
 """)
 
 # Sidebar for navigation
 st.sidebar.title("Navigation")
-page = st.sidebar.radio("Select Section", ["Datasets", "Visualizations", "Meme Gallery", "Trading Signals", "Model Insights"])
+# --- START MODIFICATION 1: UPDATED NAVIGATION LIST ---
+page = st.sidebar.radio("Select Section", [
+    "Datasets", 
+    "Visualizations", 
+    "Meme Gallery", 
+    "Upload & Explore", # NEW PAGE
+    "Model Insights"
+])
+# --- END MODIFICATION 1 ---
 
 ## 📂 Data Download Functions
 
@@ -306,17 +314,49 @@ elif page == "Meme Gallery":
 
     st.markdown("---") 
 
-elif page == "Trading Signals":
-    st.header("🚦 Trading Signals")
-    st.markdown("Signals generated from the processed data that suggest buy/sell opportunities.")
+# ----------------------------------------------------------------------
+# --- START MODIFICATION 2: NEW UPLOAD & EXPLORE SECTION ---
+elif page == "Upload & Explore":
+    st.header("⬆️ Upload & Explore Data")
+    st.markdown("Upload a new CSV file to view its details and basic statistics.")
     
-    if signals_df is not None:
-        st.subheader(f"Latest {len(signals_df)} Trading Signals")
-        st.dataframe(signals_df)
-    else:
-        st.error("Trading Signals data not loaded.")
+    uploaded_file = st.file_uploader(
+        "Choose a CSV file",
+        type="csv"
+    )
+    
+    if uploaded_file is not None:
+        try:
+            # Read the uploaded file into a DataFrame
+            uploaded_df = pd.read_csv(uploaded_file)
+            st.success(f"Successfully loaded '{uploaded_file.name}' with {len(uploaded_df)} rows and {len(uploaded_df.columns)} columns.")
+            
+            st.markdown("---")
+            
+            st.subheader("Uploaded Data Preview")
+            st.dataframe(uploaded_df.head())
+            
+            st.subheader("Data Details")
+            
+            # Display columns and types
+            col1, col2 = st.columns(2)
+            with col1:
+                st.markdown("**Column Names and Data Types:**")
+                st.dataframe(uploaded_df.dtypes.astype(str).reset_index().rename(columns={
+                    'index': 'Column', 0: 'Data Type'
+                }), hide_index=True)
+
+            # Display basic statistics
+            with col2:
+                st.markdown("**Descriptive Statistics (Numeric):**")
+                st.dataframe(uploaded_df.describe().T)
+
+        except Exception as e:
+            st.error(f"Error processing the uploaded file: {e}")
 
     st.markdown("---") 
+# --- END MODIFICATION 2 ---
+# ----------------------------------------------------------------------
 
 elif page == "Model Insights":
     st.header("🧠 Model Insights")
