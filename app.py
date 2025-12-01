@@ -307,7 +307,7 @@ elif page == "Meme Gallery":
 
     st.markdown("---") 
 
----
+
 
 elif page == "Trading Signals":
     st.header("🚦 Trading Signals")
@@ -321,7 +321,7 @@ elif page == "Trading Signals":
 
     st.markdown("---") 
 
----
+
 
 elif page == "Model Insights":
     st.header("🧠 Model Insights")
@@ -424,5 +424,6 @@ elif page == "Model Insights":
         - **'y_pred'** (Predicted labels of the test set)
         - **'y_proba'** (Prediction probabilities for the positive class)
         """)
+
 
 
