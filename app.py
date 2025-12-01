@@ -444,3 +444,4 @@ elif page == "🧠 Model Insights":
         - **'y_pred'** (Predicted labels of the test set)
         - **'y_proba'** (Prediction probabilities for the positive class)
         """)
+
