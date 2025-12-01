@@ -9,7 +9,6 @@ import gdown
 import zipfile
 import xgboost as xgb
 import logging
-# --- NEW IMPORTS for Model Metrics ---
 from sklearn.metrics import confusion_matrix, roc_curve, auc, accuracy_score, precision_score, recall_score, f1_score
 # -------------------------------------
 
@@ -18,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # --- GOOGLE DRIVE FILE IDs --- 
-# NOTE: Replace these with your actual, publicly shared Google Drive IDs.
+
 MEME_IMAGE_FILE_ID = "17y_b9nmOBx_ethy6tfv_Big8teFiD2OR" 
 PROCESSED_DATA_FILE_ID = "1TBIKxWxPeF6e70Y0NybPVFjKaMW8pCz3"
 # --- END FILE IDs ---
@@ -118,15 +117,12 @@ def load_data(image_file_id, processed_file_id):
         logger.error("Error loading CSV files: %s", str(e))
         return None, None, None, None
     
-    # ⭐ CRITICAL FIX: RENAME COLUMNS based on user input ⭐
-    # Mapping 'ticker' -> 'stock_ticker' and 'timestamp' -> 'date'
+
     try:
         main_data_df.rename(columns={
-            # 1. Rename 'ticker' to 'stock_ticker'
             'ticker': 'stock_ticker',       
-            # 2. 'price_change' is already correct, no rename needed here.
-            # 3. Rename 'timestamp' to 'date'
-            'timestamp': 'date'            
+            'timestamp': 'date'             
+          
         }, inplace=True)
     except KeyError as e:
         st.warning(f"Failed to find and rename a required column: {e}. Please ensure 'ticker' and 'timestamp' are in your CSV.")
@@ -176,9 +172,8 @@ if page == "Datasets":
         
     st.markdown("---") 
 
-# ----------------------------------------------------------------------
-# MODIFIED VISUALIZATIONS SECTION (Expected to now work)
-# ----------------------------------------------------------------------
+---
+
 elif page == "Visualizations":
     st.header("📉 Visualizations")
     st.markdown("Exploring key distributions and trends in the dataset.")
@@ -215,7 +210,7 @@ elif page == "Visualizations":
             except Exception as e:
                 st.error(f"Error generating Price Change Histogram: {e}")
         else:
-            st.warning("Column 'price_change' not found in main data. (Should be present if data loaded correctly).")
+            st.warning("Column 'price_change' not found in main data.")
 
     st.markdown("---") 
 
@@ -227,6 +222,7 @@ elif page == "Visualizations":
         st.subheader("3. Average Daily Change by Stock")
         if 'stock_ticker' in main_data_df.columns and 'price_change' in main_data_df.columns:
             try:
+                # Group and calculate mean, then limit to top 10 for cleaner display
                 avg_change = main_data_df.groupby('stock_ticker')['price_change'].mean().sort_values(ascending=False).head(10)
                 fig_bar, ax_bar = plt.subplots(figsize=(6, 4)) # Smaller figure size
                 sns.barplot(x=avg_change.index, y=avg_change.values, ax=ax_bar, palette='coolwarm')
@@ -238,7 +234,7 @@ elif page == "Visualizations":
             except Exception as e:
                 st.error(f"Error generating Average Change by Stock: {e}")
         else:
-            st.warning("Required columns 'stock_ticker' or 'price_change' not found for Bar Plot. Check renaming.")
+            st.warning("Required columns 'stock_ticker' or 'price_change' not found for Bar Plot.")
 
     # 4. Price Trend Over Time (Line Plot)
     with col4:
@@ -249,15 +245,25 @@ elif page == "Visualizations":
             try:
                 df_plot = main_data_df.copy()
                 df_plot[date_col] = pd.to_datetime(df_plot[date_col], errors='coerce')
-                df_plot = df_plot.dropna(subset=[date_col]).set_index(date_col)
+                df_plot = df_plot.dropna(subset=[date_col])
                 
+                
+                df_plot = df_plot.sort_values(by=['stock_ticker', date_col])
+                # ---------------------------------------------------------------------------------
+                
+                # Set index for rolling calculation/plotting
+                df_plot = df_plot.set_index(date_col)
+
                 # Plot the rolling average of price change for a sample stock
                 sample_ticker = df_plot['stock_ticker'].iloc[0] # Get the first ticker
                 
                 trend_data = df_plot[df_plot['stock_ticker'] == sample_ticker]['price_change'].rolling(window=7).mean().dropna()
                 
                 fig_line, ax_line = plt.subplots(figsize=(6, 4)) # Smaller figure size
+                
+                # Plotting against the index (the sorted dates)
                 ax_line.plot(trend_data.index, trend_data.values, label=f'7-Day Rolling Avg. Price Change ({sample_ticker})')
+                
                 ax_line.axhline(0, color='red', linestyle='--', linewidth=0.5)
                 ax_line.set_title(f"Price Change Trend for {sample_ticker}")
                 ax_line.set_xlabel("Date")
@@ -269,10 +275,11 @@ elif page == "Visualizations":
             except Exception as e:
                 st.error(f"Error generating Price Trend Sample: {e}")
         else:
-            st.warning("Required columns 'date', 'price_change', or 'stock_ticker' not found for Trend Plot. Check renaming.")
+            st.warning("Required columns 'date', 'price_change', or 'stock_ticker' not found for Trend Plot.")
 
     st.markdown("---") 
-# ----------------------------------------------------------------------
+
+---
 
 elif page == "Meme Gallery":
     st.header("🖼️ Meme Gallery")
@@ -301,6 +308,8 @@ elif page == "Meme Gallery":
 
     st.markdown("---") 
 
+---
+
 elif page == "Trading Signals":
     st.header("🚦 Trading Signals")
     st.markdown("Signals generated from the processed data that suggest buy/sell opportunities.")
@@ -312,6 +321,8 @@ elif page == "Trading Signals":
         st.error("Trading Signals data not loaded.")
 
     st.markdown("---") 
+
+---
 
 elif page == "Model Insights":
     st.header("🧠 Model Insights")
