@@ -1,14 +1,13 @@
 # Use a lightweight Python version
 FROM python:3.9-slim
 
-# 1. Install system dependencies for OpenCV/AI
+
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# 2. SECURITY FIX: Create a specific user "choreouser" with ID 10014
-# Choreo specifically asks for a numeric user ID (like 10014)
+
 RUN adduser \
     --disabled-password \
     --gecos "" \
@@ -30,7 +29,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 3. PERMISSION FIX: Give the new user permission to read/write the app folder
 RUN chown -R 10014:10014 /app
 
-# 4. SWITCH USER: Now switch from 'root' to our safe user '10014'
+# 4. SWITCH USER: switch from 'root' to our safe user '10014'
 USER 10014
 
 # Expose Streamlit port
