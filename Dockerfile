@@ -1,13 +1,13 @@
-# Use a lightweight Python version
-FROM python:3.9-slim
+FROM python:3.11-slim
 
-
+# Install system dependencies
+# Note: In Python 3.11/Debian 12, we use 'libgl1' instead of 'libgl1-mesa-glx'
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-
+# SECURITY FIX: Create user "choreouser"
 RUN adduser \
     --disabled-password \
     --gecos "" \
@@ -23,13 +23,15 @@ WORKDIR /app
 # Copy files
 COPY . .
 
-# Install Python dependencies (Run as root so it installs globally)
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies
+# We use --break-system-packages because Python 3.11 protects system envs by default, 
+# but in Docker it is safe to override.
+RUN pip install --no-cache-dir --break-system-packages -r requirements.txt
 
-# 3. PERMISSION FIX: Give the new user permission to read/write the app folder
+# PERMISSION FIX
 RUN chown -R 10014:10014 /app
 
-# 4. SWITCH USER: switch from 'root' to our safe user '10014'
+# SWITCH USER
 USER 10014
 
 # Expose Streamlit port
